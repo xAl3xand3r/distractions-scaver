@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click Quest - Reach the Link!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Fredoka', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a0a2e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .game-container {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #ff6b9d, #c44569);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .counter {
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .counter span {
+      color: #ff6b9d;
+      font-weight: 600;
+    }
+
+    .main-btn {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(145deg, #ff6b9d, #c44569);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 8px 30px rgba(255, 107, 157, 0.4);
+      transition: transform 0.1s, box-shadow 0.2s;
+      position: relative;
+      z-index: 10;
+    }
+
+    .main-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 40px rgba(255, 107, 157, 0.5);
+    }
+
+    .main-btn:active {
+      transform: scale(0.98);
+    }
+
+    .main-btn.blocked {
+      pointer-events: none;
+      opacity: 0.6;
+      filter: grayscale(0.5);
+    }
+
+    .obstacle {
+      position: fixed;
+      font-family: 'Fredoka', sans-serif;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      background: linear-gradient(145deg, #ffd93d, #f4a261);
+      border: none;
+      border-radius: 25px;
+      color: #2d1b4e;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(244, 162, 97, 0.5);
+      transition: transform 0.15s;
+      z-index: 5;
+      animation: popIn 0.3s ease-out;
+    }
+
+    .obstacle:hover {
+      transform: scale(1.1);
+    }
+
+    .obstacle:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes popIn {
+      from {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    .obstacle.clicked {
+      animation: popOut 0.3s ease-in forwards;
+    }
+
+    @keyframes popOut {
+      to {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+    }
+
+    .result {
+      display: none;
+      margin-top: 2rem;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .result.show {
+      display: block;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result a {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 1rem 2rem;
+      background: linear-gradient(145deg, #6bcb77, #4d96ff);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      transition: transform 0.2s;
+    }
+
+    .result a:hover {
+      transform: scale(1.05);
+    }
+
+    .hearts {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0.2;
+      animation: float 6s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.2;
+      }
+      90% {
+        opacity: 0.2;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <div class="game-container">
+    <h1>💕 Click Quest 💕</h1>
+    <p class="counter">Clicks: <span id="count">0</span> / 20</p>
+    <button class="main-btn" id="mainBtn">Click me</button>
+
+    <div class="result" id="result">
+      <p>🎉 You did it! Your reward awaits:</p>
+      <a href="https://xal3xand3r.github.io/cupid-quest/" target="_blank">Open Cupid Quest →</a>
+    </div>
+  </div>
+
+  <script>
+    const TARGET_CLICKS = 20;
+    const MAIN_BTN = document.getElementById('mainBtn');
+    const COUNT_DISPLAY = document.getElementById('count');
+    const RESULT = document.getElementById('result');
+
+    let clickCount = 0;
+    let activeObstacles = 0;
+    let obstacleInterval;
+
+    const obstacleLabels = [
+      '😊 Me first!',
+      '✨ Click here!',
+      '💫 Nope, here!',
+      '🌟 Almost!',
+      '🎀 Pick me!',
+      '💖 Wait!',
+      '🌸 Over here!',
+      '🦋 Catch me!'
+    ];
+
+    function updateCounter() {
+      COUNT_DISPLAY.textContent = clickCount;
+    }
+
+    function getRandomPosition() {
+      const padding = 80;
+      return {
+        x: padding + Math.random() * (window.innerWidth - padding * 2),
+        y: padding + Math.random() * (window.innerHeight - padding * 2)
+      };
+    }
+
+    function createObstacle() {
+      if (clickCount >= TARGET_CLICKS) return;
+
+      const obstacle = document.createElement('button');
+      obstacle.className = 'obstacle';
+      obstacle.textContent = obstacleLabels[Math.floor(Math.random() * obstacleLabels.length)];
+
+      const pos = getRandomPosition();
+      obstacle.style.left = pos.x + 'px';
+      obstacle.style.top = pos.y + 'px';
+      obstacle.style.transform = 'translate(-50%, -50%)';
+
+      obstacle.addEventListener('click', function() {
+        obstacle.classList.add('clicked');
+        activeObstacles--;
+        setTimeout(() => obstacle.remove(), 300);
+      });
+
+      document.body.appendChild(obstacle);
+      activeObstacles++;
+    }
+
+    function spawnObstacles() {
+      if (clickCount >= TARGET_CLICKS) {
+        clearInterval(obstacleInterval);
+        return;
+      }
+      if (activeObstacles < 3 && Math.random() > 0.5) {
+        createObstacle();
+      }
+    }
+
+    function mainButtonClick() {
+      if (activeObstacles > 0) {
+        MAIN_BTN.classList.add('blocked');
+        return;
+      }
+
+      MAIN_BTN.classList.remove('blocked');
+      clickCount++;
+      updateCounter();
+
+      if (clickCount >= TARGET_CLICKS) {
+        MAIN_BTN.style.display = 'none';
+        document.querySelector('.counter').style.display = 'none';
+        RESULT.classList.add('show');
+        clearInterval(obstacleInterval);
+        document.querySelectorAll('.obstacle').forEach(o => o.remove());
+      } else {
+        createObstacle();
+      }
+    }
+
+    MAIN_BTN.addEventListener('click', mainButtonClick);
+
+    obstacleInterval = setInterval(spawnObstacles, 1500);
+
+    function createHearts() {
+      const heartsContainer = document.getElementById('hearts');
+      const hearts = ['❤️', '💕', '💗', '💖'];
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDelay = Math.random() * 6 + 's';
+        heartsContainer.appendChild(heart);
+      }
+    }
+    createHearts();
+  </script>
+</body>
+</html>
