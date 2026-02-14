@@ -267,16 +267,20 @@
       obstacle.addEventListener('click', function() {
         obstacle.classList.add('clicked');
         activeObstacles--;
+        if (activeObstacles === 0) {
+          MAIN_BTN.classList.remove('blocked');
+        }
         setTimeout(() => obstacle.remove(), 300);
       });
 
       document.body.appendChild(obstacle);
       activeObstacles++;
+      MAIN_BTN.classList.add('blocked');
     }
 
     function spawnObstacles() {
-      if (clickCount >= TARGET_CLICKS) {
-        clearInterval(obstacleInterval);
+      if (clickCount >= TARGET_CLICKS || clickCount === 0) {
+        if (clickCount >= TARGET_CLICKS) clearInterval(obstacleInterval);
         return;
       }
       if (activeObstacles < 3 && Math.random() > 0.5) {
