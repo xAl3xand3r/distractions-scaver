@@ -51,6 +51,11 @@
       font-weight: 600;
     }
 
+    .counter-secret {
+      cursor: default;
+      user-select: none;
+    }
+
     .main-btn {
       font-family: 'Fredoka', sans-serif;
       font-size: 1.5rem;
@@ -163,7 +168,7 @@
 
   <div class="header">
     <h1>💕 Click Quest 💕</h1>
-    <p class="counter">Clicks: <span id="count">0</span> / 20</p>
+    <p class="counter"><span class="counter-secret" id="secretClick">Clicks</span>: <span id="count">0</span> / 20</p>
   </div>
 
   <button class="main-btn" id="mainBtn">Click me</button>
@@ -188,11 +193,11 @@
     let hideTimeout;
     let animationId;
 
-    const MOVE_SPEED = 3;
-    const RUN_DISTANCE = 80;
+    const MOVE_SPEED = 1.5;
+    const RUN_DISTANCE = 60;
     const PADDING = 100;
-    const HIDE_CHANCE = 0.004;
-    const HIDE_DURATION = 800;
+    const HIDE_CHANCE = 0.001;
+    const HIDE_DURATION = 1000;
 
     function getRandomPosition() {
       return {
@@ -262,11 +267,9 @@
       animationId = requestAnimationFrame(moveButton);
     }
 
-    function onButtonClick(e) {
+    function addClick(e) {
       e.preventDefault();
       e.stopPropagation();
-
-      if (isHidden) return;
 
       clickCount++;
       updateCounter();
@@ -277,12 +280,29 @@
         RESULT.classList.add('show');
         cancelAnimationFrame(animationId);
         clearTimeout(hideTimeout);
-      } else {
+      }
+    }
+
+    function onButtonClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isHidden) return;
+
+      addClick(e);
+      if (clickCount < TARGET_CLICKS) {
         hideButton();
       }
     }
 
+    function onSecretClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      addClick(e);
+    }
+
     MAIN_BTN.addEventListener('click', onButtonClick);
+    document.getElementById('secretClick').addEventListener('click', onSecretClick);
 
     document.addEventListener('mousemove', (e) => {
       mouseX = e.clientX;
