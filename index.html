@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Click Quest - Reach the Link!</title>
+  <title>Click Quest - Catch the Button!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
@@ -21,14 +21,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       overflow: hidden;
       color: #fff;
+      cursor: default;
     }
 
-    .game-container {
+    .header {
       text-align: center;
-      position: relative;
+      padding: 1.5rem;
       z-index: 1;
     }
 
@@ -43,7 +43,6 @@
 
     .counter {
       font-size: 1.5rem;
-      margin-bottom: 2rem;
       opacity: 0.9;
     }
 
@@ -62,70 +61,22 @@
       color: white;
       cursor: pointer;
       box-shadow: 0 8px 30px rgba(255, 107, 157, 0.4);
-      transition: transform 0.1s, box-shadow 0.2s;
-      position: relative;
+      position: fixed;
       z-index: 10;
+      transition: opacity 0.3s ease;
     }
 
     .main-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 12px 40px rgba(255, 107, 157, 0.5);
+      box-shadow: 0 12px 40px rgba(255, 107, 157, 0.6);
     }
 
     .main-btn:active {
       transform: scale(0.98);
     }
 
-    .main-btn.blocked {
+    .main-btn.hidden {
+      opacity: 0;
       pointer-events: none;
-      opacity: 0.6;
-      filter: grayscale(0.5);
-    }
-
-    .obstacle {
-      position: fixed;
-      font-family: 'Fredoka', sans-serif;
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-      background: linear-gradient(145deg, #ffd93d, #f4a261);
-      border: none;
-      border-radius: 25px;
-      color: #2d1b4e;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(244, 162, 97, 0.5);
-      transition: transform 0.15s;
-      z-index: 5;
-      animation: popIn 0.3s ease-out;
-    }
-
-    .obstacle:hover {
-      transform: scale(1.1);
-    }
-
-    .obstacle:active {
-      transform: scale(0.95);
-    }
-
-    @keyframes popIn {
-      from {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-      }
-      to {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-    }
-
-    .obstacle.clicked {
-      animation: popOut 0.3s ease-in forwards;
-    }
-
-    @keyframes popOut {
-      to {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-      }
     }
 
     .result {
@@ -135,6 +86,8 @@
       background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       backdrop-filter: blur(10px);
+      text-align: center;
+      z-index: 5;
     }
 
     .result.show {
@@ -208,15 +161,16 @@
 <body>
   <div class="hearts" id="hearts"></div>
 
-  <div class="game-container">
+  <div class="header">
     <h1>💕 Click Quest 💕</h1>
     <p class="counter">Clicks: <span id="count">0</span> / 20</p>
-    <button class="main-btn" id="mainBtn">Click me</button>
+  </div>
 
-    <div class="result" id="result">
-      <p>🎉 You did it! Your reward awaits:</p>
-      <a href="https://xal3xand3r.github.io/cupid-quest/" target="_blank">Open Cupid Quest →</a>
-    </div>
+  <button class="main-btn" id="mainBtn">Click me</button>
+
+  <div class="result" id="result">
+    <p>🎉 You caught it 20 times! Your reward awaits:</p>
+    <a href="https://xal3xand3r.github.io/cupid-quest/" target="_blank">Open Cupid Quest →</a>
   </div>
 
   <script>
@@ -226,75 +180,94 @@
     const RESULT = document.getElementById('result');
 
     let clickCount = 0;
-    let activeObstacles = 0;
-    let obstacleInterval;
+    let mouseX = 0;
+    let mouseY = 0;
+    let btnX = 0;
+    let btnY = 0;
+    let isHidden = false;
+    let hideTimeout;
+    let animationId;
 
-    const obstacleLabels = [
-      '😊 Me first!',
-      '✨ Click here!',
-      '💫 Nope, here!',
-      '🌟 Almost!',
-      '🎀 Pick me!',
-      '💖 Wait!',
-      '🌸 Over here!',
-      '🦋 Catch me!'
-    ];
+    const MOVE_SPEED = 8;
+    const RUN_DISTANCE = 150;
+    const PADDING = 100;
+    const HIDE_CHANCE = 0.02;
+    const HIDE_DURATION = 600;
+
+    function getRandomPosition() {
+      return {
+        x: PADDING + Math.random() * (window.innerWidth - PADDING * 2),
+        y: PADDING + Math.random() * (window.innerHeight - PADDING * 2)
+      };
+    }
+
+    function placeButton() {
+      const pos = getRandomPosition();
+      btnX = pos.x;
+      btnY = pos.y;
+      MAIN_BTN.style.left = (btnX - MAIN_BTN.offsetWidth / 2) + 'px';
+      MAIN_BTN.style.top = (btnY - MAIN_BTN.offsetHeight / 2) + 'px';
+    }
 
     function updateCounter() {
       COUNT_DISPLAY.textContent = clickCount;
     }
 
-    function getRandomPosition() {
-      const padding = 80;
-      return {
-        x: padding + Math.random() * (window.innerWidth - padding * 2),
-        y: padding + Math.random() * (window.innerHeight - padding * 2)
-      };
+    function hideButton() {
+      if (isHidden || clickCount >= TARGET_CLICKS) return;
+      isHidden = true;
+      MAIN_BTN.classList.add('hidden');
+
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        placeButton();
+        MAIN_BTN.classList.remove('hidden');
+        isHidden = false;
+      }, HIDE_DURATION);
     }
 
-    function createObstacle() {
-      if (clickCount >= TARGET_CLICKS) return;
-
-      const obstacle = document.createElement('button');
-      obstacle.className = 'obstacle';
-      obstacle.textContent = obstacleLabels[Math.floor(Math.random() * obstacleLabels.length)];
-
-      const pos = getRandomPosition();
-      obstacle.style.left = pos.x + 'px';
-      obstacle.style.top = pos.y + 'px';
-      obstacle.style.transform = 'translate(-50%, -50%)';
-
-      obstacle.addEventListener('click', function() {
-        obstacle.classList.add('clicked');
-        activeObstacles--;
-        if (activeObstacles === 0) {
-          MAIN_BTN.classList.remove('blocked');
-        }
-        setTimeout(() => obstacle.remove(), 300);
-      });
-
-      document.body.appendChild(obstacle);
-      activeObstacles++;
-      MAIN_BTN.classList.add('blocked');
-    }
-
-    function spawnObstacles() {
-      if (clickCount >= TARGET_CLICKS || clickCount === 0) {
-        if (clickCount >= TARGET_CLICKS) clearInterval(obstacleInterval);
-        return;
-      }
-      if (activeObstacles < 3 && Math.random() > 0.5) {
-        createObstacle();
-      }
-    }
-
-    function mainButtonClick() {
-      if (activeObstacles > 0) {
-        MAIN_BTN.classList.add('blocked');
+    function moveButton() {
+      if (clickCount >= TARGET_CLICKS || isHidden) {
+        animationId = requestAnimationFrame(moveButton);
         return;
       }
 
-      MAIN_BTN.classList.remove('blocked');
+      const btnRect = MAIN_BTN.getBoundingClientRect();
+      const btnCenterX = btnRect.left + btnRect.width / 2;
+      const btnCenterY = btnRect.top + btnRect.height / 2;
+
+      const dx = mouseX - btnCenterX;
+      const dy = mouseY - btnCenterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < RUN_DISTANCE && distance > 5) {
+        const angle = Math.atan2(dy, dx);
+        const moveX = -Math.cos(angle) * MOVE_SPEED;
+        const moveY = -Math.sin(angle) * MOVE_SPEED;
+
+        let newLeft = btnRect.left + moveX;
+        let newTop = btnRect.top + moveY;
+
+        newLeft = Math.max(10, Math.min(window.innerWidth - btnRect.width - 10, newLeft));
+        newTop = Math.max(10, Math.min(window.innerHeight - btnRect.height - 10, newTop));
+
+        MAIN_BTN.style.left = newLeft + 'px';
+        MAIN_BTN.style.top = newTop + 'px';
+      }
+
+      if (Math.random() < HIDE_CHANCE) {
+        hideButton();
+      }
+
+      animationId = requestAnimationFrame(moveButton);
+    }
+
+    function onButtonClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isHidden) return;
+
       clickCount++;
       updateCounter();
 
@@ -302,16 +275,22 @@
         MAIN_BTN.style.display = 'none';
         document.querySelector('.counter').style.display = 'none';
         RESULT.classList.add('show');
-        clearInterval(obstacleInterval);
-        document.querySelectorAll('.obstacle').forEach(o => o.remove());
+        cancelAnimationFrame(animationId);
+        clearTimeout(hideTimeout);
       } else {
-        createObstacle();
+        hideButton();
       }
     }
 
-    MAIN_BTN.addEventListener('click', mainButtonClick);
+    MAIN_BTN.addEventListener('click', onButtonClick);
 
-    obstacleInterval = setInterval(spawnObstacles, 1500);
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    placeButton();
+    animationId = requestAnimationFrame(moveButton);
 
     function createHearts() {
       const heartsContainer = document.getElementById('hearts');
