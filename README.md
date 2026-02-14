@@ -1,13 +1,13 @@
 # Click Quest 💕
 
-A fun click-based game where you need to click the main button 20 times to reveal a special link. Obstacle buttons will appear and block your progress until you click them first!
+Catch the "Click me" button 20 times to reveal your reward! The button moves around and runs away from your cursor, sometimes disappearing and reappearing elsewhere. Good luck catching it!
 
 ## How to Play
 
-1. Click the **"Click me"** button
-2. When obstacle buttons pop up, click them to clear the path
-3. Keep clicking the main button until you reach 20 clicks
-4. On the 20th click, your reward link is revealed: [Cupid Quest](https://xal3xand3r.github.io/cupid-quest/)
+1. Move your cursor toward the **"Click me"** button
+2. It will run away from you—chase it and click when you catch it!
+3. Sometimes it disappears and reappears in a new spot
+4. Get 20 clicks to reveal the link: [Cupid Quest](https://xal3xand3r.github.io/cupid-quest/)
 
 ## Run Locally
 
